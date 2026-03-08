@@ -2,8 +2,13 @@
 #include <cstdlib>
 #include <getopt.h>
 #include "RtMidi.h"
+#include "tinyosc.h"
 
 int main (int argc, char **argv) {
+  // ----------------
+  // Argument parsing
+  // ----------------
+
   int opt;
   // External variable set by getopt_long to the option's argument
   extern char *optarg; 
@@ -42,6 +47,10 @@ int main (int argc, char **argv) {
   for (int i = optind; i < argc; i++) {
     printf("Non-option argument: %s\n", argv[i]);
   }
+
+  // ----
+  // MIDI
+  // ----
 
   RtMidiIn *midiin = 0;
   RtMidiOut *midiout = 0;
@@ -95,6 +104,12 @@ int main (int argc, char **argv) {
   cleanup:
   delete midiin;
   delete midiout;
+  
+  // ---
+  // OSC
+  // ---
+
+  tosc_message osc;
 
   return 0;
 }

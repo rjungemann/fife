@@ -12,5 +12,8 @@ add_subdirectory(vendor/rtmidi)
 # Add the executable
 add_executable(midcat src/main.cpp)
 
-target_link_libraries(midcat PRIVATE rtmidi)
+target_sources(midcat PRIVATE vendor/tinyosc/tinyosc.c)
 
+target_include_directories(midcat PRIVATE vendor/tinyosc)
+
+target_link_libraries(midcat PRIVATE rtmidi)
