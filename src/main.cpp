@@ -4,13 +4,18 @@
 #include <cstdlib>
 #include <getopt.h>
 #include "RtMidi.h"
-#include "tinyosc.h"
+/*#include "tinyosc.h"*/
 
 #include <arpa/inet.h>
 #include <sys/select.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <cstring>
+
+#include <oscpp/client.hpp>
+#include <oscpp/server.hpp>
+#include <oscpp/print.hpp>
+#include <iostream>
 
 struct context;
 
@@ -26,6 +31,8 @@ std::optional<int> get_midi_in_device_index (context &ctx, const std::string &de
 std::optional<int> get_midi_out_device_index (context &ctx, const std::string &device_name);
 void handle_midi_devices (context &ctx);
 void handle_osc (context &ctx);
+static void sigint_handler(int x);
+void handle_osc_packet (const OSCPP::Server::Packet& packet);
 void handle_osc_send (context &ctx);
 void handle_osc_listen (context &ctx);
 
@@ -92,27 +99,27 @@ void handle_arguments (context &ctx, int argc, char **argv) {
   while ((opt = getopt_long(argc, argv, "vhi:o:H:p:", long_options, NULL)) != -1) {
     switch (opt) {
       case 'v':
-        fprintf(stderr, "Verbose mode enabled\n");
+        /*fprintf(stderr, "Verbose mode enabled\n");*/
         ctx.verbose = true;
         break;
       case 'c':
-        fprintf(stderr, "Channel specified: %s\n", optarg);
+        /*fprintf(stderr, "Channel specified: %s\n", optarg);*/
         ctx.channel = std::atoi(optarg);
         break;
       case 'i':
-        fprintf(stderr, "Hardware device specified: %s\n", optarg);
+        /*fprintf(stderr, "Requesting input device matching \"%s\"\n", optarg);*/
         ctx.in_device = std::string(optarg);
         break;
       case 'o':
-        fprintf(stderr, "Hardware device specified: %s\n", optarg);
+        /*fprintf(stderr, "Requesting output device matching \"%s\"\n", optarg);*/
         ctx.out_device = std::string(optarg);
         break;
       case 'H':
-        fprintf(stderr, "Host specified: %s\n", optarg);
+        /*fprintf(stderr, "Host specified: %s\n", optarg);*/
         ctx.host = std::string(optarg);
         break;
       case 'p':
-        fprintf(stderr, "Port specified: %s\n", optarg);
+        /*fprintf(stderr, "Port specified: %s\n", optarg);*/
         ctx.port = std::atoi(optarg);
         break;
       case 'h':
@@ -125,9 +132,14 @@ void handle_arguments (context &ctx, int argc, char **argv) {
   }
   // Process any remaining non-option arguments
   for (int i = optind; i < argc; i++) {
-    fprintf(stderr, "Non-option argument: %s\n", argv[i]);
     ctx.extra_args.push_back(std::string(argv[i]));
   }
+  /*// Inspect non-option arguments*/
+  /*fprintf(stderr, "Non-option arguments: {");*/
+  /*for (std::string n : ctx.extra_args) {*/
+  /*  fprintf(stderr, "\"%s\",", n.c_str());*/
+  /*}*/
+  /*fprintf(stderr, "}\n");*/
 }
 
 // TODO: Size checking (4 for hex, 1-3 for decimal)
@@ -166,7 +178,7 @@ void handle_midi (context &ctx) {
       bail();
       return;
     }
-    fprintf(stderr, "Opening MIDI input device with index %d\n", index.value());
+    /*fprintf(stderr, "Opening MIDI input device with index %d\n", index.value());*/
     ctx.midiin->openPort(index.value());
   }
   if (ctx.out_device) {
@@ -175,18 +187,20 @@ void handle_midi (context &ctx) {
       bail();
       return;
     }
-    fprintf(stderr, "Opening MIDI output device with index %d\n", index.value());
+    /*fprintf(stderr, "Opening MIDI output device with index %d\n", index.value());*/
     ctx.midiout->openPort(index.value());
   }
 
   // Handle command
   if (ctx.command == "devices") {
+    fprintf(stderr, "Listing MIDI devices...\n");
     handle_midi_devices(ctx);
   }
   if (ctx.command == "note-on") {
     unsigned char note = parse_byte(ctx.extra_args[0]);
     unsigned char velocity = parse_byte(ctx.extra_args[1]);
     unsigned char status = 0x90 + (ctx.channel.value_or(1) - 1);
+    fprintf(stderr, "Generating a note-on event (%d, %d) on channel %d\n", note, velocity, ctx.channel.value_or(1));
     std::vector<unsigned char> message = {status, note, velocity};
     ctx.midiout->sendMessage(&message);
   }
@@ -297,7 +311,7 @@ std::optional<int> get_midi_in_device_index (context &ctx, const std::string &de
     try {
       std::string port_name = ctx.midiin->getPortName(i);
       if (slug_match(port_name, device_name)) {
-        fprintf(stderr, "Found MIDI input device '%s' matching '%s' at index %d\n", port_name.c_str(), device_name.c_str(), i);
+        fprintf(stderr, "Found MIDI input device \"%s\" matching \"%s\" at (index %d)\n", port_name.c_str(), device_name.c_str(), i);
         return i;
       }
     }
@@ -306,7 +320,7 @@ std::optional<int> get_midi_in_device_index (context &ctx, const std::string &de
       return std::nullopt;
     }
   }
-  fprintf(stderr, "MIDI input device not found: %s\n", device_name.c_str());
+  fprintf(stderr, "MIDI input device not found matching \"%s\"\n", device_name.c_str());
   bail();
 }
 
@@ -316,7 +330,7 @@ std::optional<int> get_midi_out_device_index (context &ctx, const std::string &d
     try {
       std::string port_name = ctx.midiout->getPortName(i);
       if (slug_match(port_name, device_name)) {
-        fprintf(stderr, "Found MIDI output device '%s' matching '%s' at index %d\n", port_name.c_str(), device_name.c_str(), i);
+        fprintf(stderr, "Found MIDI output device \"%s\" matching \"%s\" (at index %d)\n", port_name.c_str(), device_name.c_str(), i);
         return i;
       }
     }
@@ -332,7 +346,6 @@ std::optional<int> get_midi_out_device_index (context &ctx, const std::string &d
 void handle_midi_devices (context &ctx) {
   // Check inputs.
   unsigned int nPorts = ctx.midiin->getPortCount();
-  fprintf(stderr, "MIDI input sources\n", nPorts);
   std::string portName;
   for (unsigned int i = 0; i < nPorts; i++) {
     try {
@@ -342,12 +355,11 @@ void handle_midi_devices (context &ctx) {
       error.printMessage();
       return;
     }
-    fprintf(stderr, "  [%d] %s\n", i, portName.c_str());
+    fprintf(stdout, "Input\t%d\t%s\n", i, portName.c_str());
   }
  
   // Check outputs.
   nPorts = ctx.midiout->getPortCount();
-  fprintf(stderr, "MIDI output sources\n", nPorts);
   for (unsigned int i=0; i<nPorts; i++) {
     try {
       portName = ctx.midiout->getPortName(i);
@@ -356,7 +368,7 @@ void handle_midi_devices (context &ctx) {
       error.printMessage();
       return;
     }
-    fprintf(stderr, "  [%d] %s\n", i, portName.c_str());
+    fprintf(stdout, "Output\t%d\t%s\n", i, portName.c_str());
   }
 }
 
@@ -370,15 +382,42 @@ void handle_osc (context &ctx) {
 }
 
 void handle_osc_send (context &ctx) {
+
   std::string address = ctx.extra_args[0];
   // TODO: Make sure types are converted properly
   std::string type_tags = ctx.extra_args[1];
   std::vector<std::string> arg_strings(ctx.extra_args.begin() + 2, ctx.extra_args.end());
 
+  fprintf(stderr, "%s %s {", address.c_str(), type_tags.c_str());
+  for (std::string n : arg_strings) {
+    fprintf(stderr, "\"%s\",", n.c_str());
+  }
+  fprintf(stderr, "}\n");
+
   const int buffersize = 2048;
-  char buffer[buffersize];
-  int len = tosc_writeMessage(buffer, sizeof(buffer), address.c_str(), type_tags.c_str(), arg_strings.size(), arg_strings.data());
-  tosc_printOscBuffer(buffer, len);
+  void *buffer[buffersize];
+  OSCPP::Client::Packet packet(buffer, buffersize);
+  packet.openMessage(address.c_str(), 2 + OSCPP::Tags::array(type_tags.size()));
+  for (auto i = 0; i < type_tags.size(); i++) {
+    char tag = type_tags[i];
+    switch (tag) {
+      case 's':
+        packet.string(arg_strings[i].c_str());
+        break;
+      case 'i':
+        packet.int32(std::atoi(arg_strings[i].c_str()));
+        break;
+      case 'f':
+        packet.float32(std::atof(arg_strings[i].c_str()));
+        break;
+      // TODO: Other types
+      default:
+        fprintf(stderr, "Unrecognized type: \"%c\"\n", tag);
+        bail();
+    }
+  }
+  packet.closeMessage();
+  printf("Size: %d\n", packet.size());
   
   struct timespec start, end;
   int sockfd;
@@ -397,7 +436,7 @@ void handle_osc_send (context &ctx) {
 
   fprintf(stderr, "Send UDP data...\n");
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-  if (sendto(sockfd, &buffer, buffersize, 0, (const struct sockaddr*)&server, sizeof(server)) < 0) {
+  if (sendto(sockfd, &buffer, packet.size(), 0, (const struct sockaddr*)&server, sizeof(server)) < 0) {
     fprintf(stderr, "Error in sendto()\n");
     exit(EXIT_FAILURE);
   }
@@ -415,8 +454,66 @@ static void sigint_handler(int x) {
   keep_running = false;
 }
 
+void handle_osc_packet (const OSCPP::Server::Packet& packet) {
+  if (packet.isBundle()) {
+    // Convert to bundle
+    OSCPP::Server::Bundle bundle(packet);
+
+    // Print the time
+    std::cout << "#bundle " << bundle.time() << std::endl;
+
+    // Get packet stream
+    OSCPP::Server::PacketStream packets(bundle.packets());
+
+    // Iterate over all the packets and call handle_packet recursively.
+    // Cuidado: Might lead to stack overflow!
+    while (!packets.atEnd()) {
+      handle_osc_packet(packets.next());
+    }
+  } else {
+    // Convert to message
+    OSCPP::Server::Message msg(packet);
+
+    // Get argument stream
+    OSCPP::Server::ArgStream args(msg.args());
+
+    // TODO
+    fprintf(stdout, "TODO: Received message\n");
+
+    /*if (msg == "/s_new") {*/
+    /*  const char* name = args.string();*/
+    /*  const int32_t id = args.int32();*/
+    /*  std::cout << "/s_new" << " "*/
+    /*    << name << " "*/
+    /*    << id << " ";*/
+    /*  // Get the params array as an ArgStream*/
+    /*  OSCPP::Server::ArgStream params(args.array());*/
+    /*  while (!params.atEnd()) {*/
+    /*    const char* param = params.string();*/
+    /*    const float value = params.float32();*/
+    /*    std::cout << param << ":" << value << " ";*/
+    /*  }*/
+    /*  std::cout << std::endl;*/
+    /*} else if (msg == "/n_set") {*/
+    /*  const int32_t id = args.int32();*/
+    /*  const char* key = args.string();*/
+    /*  // Numeric arguments are converted automatically*/
+    /*  // to float32 (e.g. from int32).*/
+    /*  const float value = args.float32();*/
+    /*  std::cout << "/n_set" << " "*/
+    /*    << id << " "*/
+    /*    << key << " "*/
+    /*    << value << std::endl;*/
+    /*} else {*/
+    /*  // Simply print unknown messages*/
+    /*  std::cout << "Unknown message: " << msg << std::endl;*/
+    /*}*/
+  }
+}
+
 void handle_osc_listen (context &ctx) {
-  char buffer[2048]; // declare a 2Kb buffer to read packet data into
+  const int buffersize = 2048;
+  std::array<char, buffersize> buffer; // declare a 2Kb buffer to read packet data into
   int port = ctx.port.value_or(9000);
 
   // register the SIGINT handler (Ctrl+C)
@@ -442,20 +539,8 @@ void handle_osc_listen (context &ctx) {
       struct sockaddr sa; // can be safely cast to sockaddr_in
       socklen_t sa_len = sizeof(struct sockaddr_in);
       int len = 0;
-      while ((len = (int) recvfrom(fd, buffer, sizeof(buffer), 0, &sa, &sa_len)) > 0) {
-        if (tosc_isBundle(buffer)) {
-          tosc_bundle bundle;
-          tosc_parseBundle(&bundle, buffer, len);
-          const uint64_t timetag = tosc_getTimetag(&bundle);
-          tosc_message osc;
-          while (tosc_getNextMessage(&bundle, &osc)) {
-            tosc_printMessage(&osc);
-          }
-        } else {
-          tosc_message osc;
-          tosc_parseMessage(&osc, buffer, len);
-          tosc_printMessage(&osc);
-        }
+      while ((len = (int) recvfrom(fd, buffer.data(), buffer.size(), 0, &sa, &sa_len)) > 0) {
+        handle_osc_packet(OSCPP::Server::Packet(buffer.data(), len));
       }
     }
   }

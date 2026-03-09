@@ -14,7 +14,19 @@ add_executable(fife src/main.cpp)
 target_compile_options(fife PUBLIC -g -Wno-narrowing -Wno-format)
 
 target_sources(fife PRIVATE vendor/tinyosc/tinyosc.c)
+target_sources(fife PRIVATE
+  vendor/oscpp/include/oscpp/client.hpp
+  vendor/oscpp/include/oscpp/error.hpp
+  vendor/oscpp/include/oscpp/print.hpp
+  vendor/oscpp/include/oscpp/server.hpp
+  vendor/oscpp/include/oscpp/types.hpp
+  vendor/oscpp/include/oscpp/util.hpp
+  vendor/oscpp/include/oscpp/detail/endian.hpp
+  vendor/oscpp/include/oscpp/detail/host.hpp
+  vendor/oscpp/include/oscpp/detail/stream.hpp
+)
 
 target_include_directories(fife PRIVATE vendor/tinyosc)
+target_include_directories(fife PRIVATE vendor/oscpp/include)
 
 target_link_libraries(fife PRIVATE rtmidi)

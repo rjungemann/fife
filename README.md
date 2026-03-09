@@ -4,11 +4,20 @@ By Roger Jungemann
 
 ## What is Fife?
 
-Fife is a swiss-army knife utility for processing MIDI and OSC messages from the command line. Integrate your command-line scripts with MIDI and OSC.
+Fife is a tool for processing MIDI and OSC messages from the command line.
+Integrate your shell scripts with MIDI and OSC.
 
 ## Instructions
 
+Requires your OS's build tools and `cmake`. `just` is optional, for my
+convenience.
+
 ```sh
+# Using just
+just --list
+just
+
+# Without just
 mkdir -p build
 cd build
 cmake ..
@@ -19,20 +28,15 @@ pw-jack ./fife
 ## TODO
 
 * MIDI
-  * Listen for incoming MIDI messages
   * Create a virtual MIDI port
   * Clock events?
   * MPE?
   * TODO: What else?
-* OSC
-  * Send OSC messages
-  * Listen for incoming OSC messages
-* Make MIDI channel a named argument?
 * Allow changing of MIDI API (ALSA, JACK, etc.)
 * Audit validation of inputs
 * Audit use of stdout and stderr
 * Audit rendering of listen commands
-* Use `has_value` to verify optionals
+* Use `has_value` or similar to verify optionals
 
 ```sh
 --help
@@ -66,3 +70,4 @@ fife osc listen --host=0.0.0.0 --port=9000 /hello siii
 * https://caml.music.mcgill.ca/~gary/rtmidi/
 * https://github.com/thestk/rtmidi
 * https://github.com/mhroth/tinyosc
+* https://github.com/kaoskorobase/oscpp
