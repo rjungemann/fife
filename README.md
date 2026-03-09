@@ -40,17 +40,36 @@ pw-jack ./fife
 * OSC arrays
 * OSC bundles
 
+To get usage info:
+
 ```sh
+fife help
+```
+
+Named arguments:
+
+```sh
+# Output usage message
 --help
+
+# Enable verbose output on stderr
 --verbose
+
+# Set MIDI hardware device(s)
 --in-device=DEVICE
 --out-device=DEVICE
+
+# Set MIDI channel
 --channel=CHANNEL
+
+# Set OSC host and port
 --host=HOST
 --port=PORT
+```
 
-fife help
+Sending and receiving MIDI messages:
 
+```sh
 # List MIDI input and output devices
 fife midi devices
 
@@ -72,8 +91,13 @@ fife midi send 240 126 16 6 1 247
 fife midi open-in-port "Test Device"
 fife midi open-out-port "Test Device"
 
-fife midi listen
+# Listen for incoming MIDI messages
+fife midi listen --channel=1
+```
 
+Send and receive OSC messages:
+
+```sh
 fife osc send --host=127.0.0.1 --port=9000 /hello siii foo 1 2 3
 
 fife osc listen --host=0.0.0.0 --port=9000 /hello siii
