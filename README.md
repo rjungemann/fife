@@ -19,11 +19,6 @@ pw-jack ./fife
 ## TODO
 
 * MIDI
-  * Send note-on
-  * Send note-off
-  * Send CC's
-  * Send program changes
-  * Send sysex
   * Listen for incoming MIDI messages
   * Create a virtual MIDI port
   * Clock events?
@@ -32,33 +27,30 @@ pw-jack ./fife
 * OSC
   * Send OSC messages
   * Listen for incoming OSC messages
-  * TODO: What else?
-* Scripting?
+* Allow changing of MIDI API (ALSA, JACK, etc.)
 
 ```sh
 --help
 --verbose
---device=DEVICE
+--in-device=DEVICE
+--out-device=DEVICE
+--host=HOST
+--port=PORT
 
-
-fire help
+fife help
 
 fife midi devices
 fife midi note-on 1 48 64
 fife midi note-off 1 48 0
-fife midi control-change 1 16
-fife midi raw 0xF0 0x7E 0x10 0x06 0x01 0xF7
+fife midi control-change 7 16
+fife midi program-change 1 16
+fife midi send 0xF0 0x7E 0x10 0x06 0x01 0xF7
 
 fife midi listen 1
-# TODO: Filtering?
-# TODO: Format?
 
-fife osc message 127.0.0.1:8000/hello,siii foo 1 2 3
+fife osc send --host=127.0.0.1 --port=9000 /hello siii foo 1 2 3
 
-fife osc listen 127.0.0.1:8000/hello,siii
-# TODO: Wildcards or less constrained routes?
-# TODO: Filtering?
-# TODO: Format?
+fife osc listen --host=0.0.0.0 --port=9000 /hello siii
 ```
 
 ## References

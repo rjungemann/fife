@@ -25,6 +25,7 @@ std::optional<int> get_midi_in_device_index (context &ctx, const std::string &de
 std::optional<int> get_midi_out_device_index (context &ctx, const std::string &device_name);
 void handle_midi_devices (context &ctx);
 void handle_osc (context &ctx);
+void handle_osc_send (context &ctx);
 
 struct context {
   std::optional<std::string> adapter;
@@ -36,6 +37,8 @@ struct context {
   bool verbose = false;
   std::optional<std::string> in_device;
   std::optional<std::string> out_device;
+  std::optional<std::string> host;
+  std::optional<int> port;
 
   std::vector<std::string> extra_args;
 };
@@ -51,6 +54,8 @@ void print_usage () {
   fprintf(stderr, "  --help              Show this help message\n");
   fprintf(stderr, "  --in-device         Name of hardware device to use\n");
   fprintf(stderr, "  --out-device        Name of hardware device to use\n");
+  fprintf(stderr, "  --host              Host to send OSC messages to (default: 127.0.0.1)\n");
+  fprintf(stderr, "  --port              Port to send OSC messages to (default: 9000)\n");
 }
 
 void handle_arguments (context &ctx, int argc, char **argv) {
@@ -74,10 +79,12 @@ void handle_arguments (context &ctx, int argc, char **argv) {
     { "help", no_argument, NULL, 'h' },
     { "in-device", optional_argument, NULL, 'i' },
     { "out-device", optional_argument, NULL, 'o' },
+    { "host", optional_argument, NULL, 'H' },
+    { "port", optional_argument, NULL, 'p' },
     { NULL, 0, NULL, 0 } // Required end-of-array marker
   };
 
-  while ((opt = getopt_long(argc, argv, "vhi:o:", long_options, NULL)) != -1) {
+  while ((opt = getopt_long(argc, argv, "vhi:o:H:p:", long_options, NULL)) != -1) {
     switch (opt) {
       case 'v':
         fprintf(stderr, "Verbose mode enabled\n");
@@ -90,6 +97,14 @@ void handle_arguments (context &ctx, int argc, char **argv) {
       case 'o':
         fprintf(stderr, "Hardware device specified: %s\n", optarg);
         ctx.out_device = std::string(optarg);
+        break;
+      case 'H':
+        fprintf(stderr, "Host specified: %s\n", optarg);
+        ctx.host = std::string(optarg);
+        break;
+      case 'p':
+        fprintf(stderr, "Port specified: %s\n", optarg);
+        ctx.port = std::atoi(optarg);
         break;
       case 'h':
       case '?':
@@ -275,25 +290,25 @@ void handle_midi_devices (context &ctx) {
 }
 
 void handle_osc (context &ctx) {
+  if (ctx.command == "send") {
+    handle_osc_send(ctx);
+  }
+}
+
+void handle_osc_send (context &ctx) {
+  std::string address = ctx.extra_args[0];
+  // TODO: Make sure types are converted properly
+  std::string type_tags = ctx.extra_args[1];
+  std::vector<std::string> arg_strings(ctx.extra_args.begin() + 2, ctx.extra_args.end());
+
   const int buffersize = 2048;
-  const int framesize = 1442;
-  char buffer[buffersize]; // declare a 2Kb buffer to read packet data into
-
-  fprintf(stderr, "Starting write tests:\n");
-  int len = 0;
-  char blob[8] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
-  len = tosc_writeMessage(buffer, sizeof(buffer), "/address", "fsibTFNI",
-      1.0f, "hello world", -1, sizeof(blob), blob);
+  char buffer[buffersize];
+  int len = tosc_writeMessage(buffer, sizeof(buffer), address.c_str(), type_tags.c_str(), arg_strings.size(), arg_strings.data());
   tosc_printOscBuffer(buffer, len);
-  fprintf(stderr, "done.\n");
-
   
   struct timespec start, end;
   int sockfd;
   struct sockaddr_in server;
-  const char *address = "127.0.0.1";
-  const int port = 9000;
-
   fprintf(stderr, "Configure socket...\n");
   sockfd = socket(AF_INET, SOCK_DGRAM, 0);
   if (sockfd < 0) {
@@ -303,8 +318,8 @@ void handle_osc (context &ctx) {
 
   bzero((char*)&server, sizeof(server));
   server.sin_family = AF_INET;
-  server.sin_addr.s_addr = inet_addr(address);
-  server.sin_port = htons(port);
+  server.sin_addr.s_addr = inet_addr(ctx.host.value().c_str());
+  server.sin_port = htons(ctx.port.value());
 
   fprintf(stderr, "Send UDP data...\n");
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
