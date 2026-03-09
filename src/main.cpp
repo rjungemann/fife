@@ -19,6 +19,7 @@ void print_usage ();
 void handle_arguments (context &ctx, int argc, char **argv);
 unsigned char parse_byte (std::string str);
 void handle_midi (context &ctx);
+void handle_midi_listen (context &ctx);
 std::string sluggerize (std::string str);
 bool slug_match (std::string a, std::string b);
 std::optional<int> get_midi_in_device_index (context &ctx, const std::string &device_name);
@@ -26,6 +27,7 @@ std::optional<int> get_midi_out_device_index (context &ctx, const std::string &d
 void handle_midi_devices (context &ctx);
 void handle_osc (context &ctx);
 void handle_osc_send (context &ctx);
+void handle_osc_listen (context &ctx);
 
 struct context {
   std::optional<std::string> adapter;
@@ -35,6 +37,7 @@ struct context {
   std::unique_ptr<RtMidiOut> midiout;
 
   bool verbose = false;
+  std::optional<int> channel;
   std::optional<std::string> in_device;
   std::optional<std::string> out_device;
   std::optional<std::string> host;
@@ -52,10 +55,11 @@ void print_usage () {
   fprintf(stderr, "Commands:\n");
   fprintf(stderr, "  --verbose           Enable verbose mode\n");
   fprintf(stderr, "  --help              Show this help message\n");
+  fprintf(stderr, "  --channel=1         Channel to send messages to (default: 1)\n");
   fprintf(stderr, "  --in-device         Name of hardware device to use\n");
   fprintf(stderr, "  --out-device        Name of hardware device to use\n");
-  fprintf(stderr, "  --host              Host to send OSC messages to (default: 127.0.0.1)\n");
-  fprintf(stderr, "  --port              Port to send OSC messages to (default: 9000)\n");
+  fprintf(stderr, "  --host=127.0.0.1    Host to send OSC messages to (default: 127.0.0.1)\n");
+  fprintf(stderr, "  --port=9000         Port to send OSC messages to (default: 9000)\n");
 }
 
 void handle_arguments (context &ctx, int argc, char **argv) {
@@ -77,6 +81,7 @@ void handle_arguments (context &ctx, int argc, char **argv) {
     // {name, has_arg, flag, val}
     { "verbose", no_argument, NULL, 'v' },
     { "help", no_argument, NULL, 'h' },
+    { "channel", optional_argument, NULL, 'c' },
     { "in-device", optional_argument, NULL, 'i' },
     { "out-device", optional_argument, NULL, 'o' },
     { "host", optional_argument, NULL, 'H' },
@@ -89,6 +94,10 @@ void handle_arguments (context &ctx, int argc, char **argv) {
       case 'v':
         fprintf(stderr, "Verbose mode enabled\n");
         ctx.verbose = true;
+        break;
+      case 'c':
+        fprintf(stderr, "Channel specified: %s\n", optarg);
+        ctx.channel = std::atoi(optarg);
         break;
       case 'i':
         fprintf(stderr, "Hardware device specified: %s\n", optarg);
@@ -177,33 +186,61 @@ void handle_midi (context &ctx) {
   if (ctx.command == "note-on") {
     unsigned char note = parse_byte(ctx.extra_args[0]);
     unsigned char velocity = parse_byte(ctx.extra_args[1]);
-    std::vector<unsigned char> message = {0x90, note, velocity};
+    unsigned char status = 0x90 + (ctx.channel.value_or(1) - 1);
+    std::vector<unsigned char> message = {status, note, velocity};
     ctx.midiout->sendMessage(&message);
   }
   if (ctx.command == "note-off") {
     unsigned char note = parse_byte(ctx.extra_args[0]);
     unsigned char velocity = parse_byte(ctx.extra_args[1]);
-    std::vector<unsigned char> message = {0x80, note, velocity};
+    unsigned char status = 0x80 + (ctx.channel.value_or(1) - 1);
+    std::vector<unsigned char> message = {status, note, velocity};
     ctx.midiout->sendMessage(&message);
   }
   if (ctx.command == "control-change") {
     unsigned char controller = parse_byte(ctx.extra_args[0]);
     unsigned char value = parse_byte(ctx.extra_args[1]);
-    std::vector<unsigned char> message = {0xB0, controller, value};
+    unsigned char status = 0xB0 + (ctx.channel.value_or(1) - 1);
+    std::vector<unsigned char> message = {status, controller, value};
     ctx.midiout->sendMessage(&message);
   }
   if (ctx.command == "program-change") {
     unsigned char program = parse_byte(ctx.extra_args[0]);
-    std::vector<unsigned char> message = {0xC0, program};
+    unsigned char status = 0xC0 + (ctx.channel.value_or(1) - 1);
+    std::vector<unsigned char> message = {status, program};
     ctx.midiout->sendMessage(&message);
   }
-  if (ctx.command == "raw") {
+  if (ctx.command == "send") {
     std::vector<unsigned char> message;
     for (const std::string &arg : ctx.extra_args) {
       message.push_back(parse_byte(arg));
     }
     ctx.midiout->sendMessage(&message);
   }
+  if (ctx.command == "listen") {
+    handle_midi_listen(ctx);
+  }
+}
+
+void handle_midi_callback (double deltatime, std::vector<unsigned char> *message, void *userData) {
+  context *ctx = (context*)userData;
+  unsigned int num_bytes = message->size();
+  for (unsigned int i = 0; i < num_bytes; i++) {
+    printf("%f %d %d\n, ", deltatime, i, message->at(i));
+  }
+}
+
+void handle_midi_listen (context &ctx) {
+  fprintf(stderr, "Listening for MIDI input...\n");
+  ctx.midiin->setCallback( &handle_midi_callback, &ctx );
+ 
+  // Don't ignore sysex, timing, or active sensing messages.
+  ctx.midiin->ignoreTypes(false, false, false);
+ 
+  // Wait for user input to quit.
+  std::cout << "\nReading MIDI input ... press <enter> to quit.\n";
+  char input;
+  std::cin.get(input);
 }
 
 std::string sluggerize (std::string str /* by copy */) {
@@ -293,6 +330,9 @@ void handle_osc (context &ctx) {
   if (ctx.command == "send") {
     handle_osc_send(ctx);
   }
+  if (ctx.command == "listen") {
+    handle_osc_listen(ctx);
+  }
 }
 
 void handle_osc_send (context &ctx) {
@@ -332,6 +372,62 @@ void handle_osc_send (context &ctx) {
 
   fprintf(stderr, "Time to send: %f[s]\n", delta_us / 1e6f);
   fprintf(stderr, "Finished...\n");
+}
+
+static volatile bool keep_running = true;
+
+// handle Ctrl+C
+static void sigint_handler(int x) {
+  keep_running = false;
+}
+
+void handle_osc_listen (context &ctx) {
+  char buffer[2048]; // declare a 2Kb buffer to read packet data into
+  int port = ctx.port.value_or(9000);
+
+  // register the SIGINT handler (Ctrl+C)
+  signal(SIGINT, &sigint_handler);
+
+  // open a socket to listen for datagrams (i.e. UDP packets) on port 9000
+  const int fd = socket(AF_INET, SOCK_DGRAM, 0);
+  fcntl(fd, F_SETFL, O_NONBLOCK); // set the socket to non-blocking
+  struct sockaddr_in sin;
+  sin.sin_family = AF_INET;
+  sin.sin_port = htons(port);
+  sin.sin_addr.s_addr = INADDR_ANY;
+  bind(fd, (struct sockaddr *) &sin, sizeof(struct sockaddr_in));
+  printf("Listening for OSC messages on port %d.\n", port);
+  printf("Press Ctrl+C to stop.\n");
+
+  while (keep_running) {
+    fd_set readSet;
+    FD_ZERO(&readSet);
+    FD_SET(fd, &readSet);
+    struct timeval timeout = {1, 0}; // select times out after 1 second
+    if (select(fd+1, &readSet, NULL, NULL, &timeout) > 0) {
+      struct sockaddr sa; // can be safely cast to sockaddr_in
+      socklen_t sa_len = sizeof(struct sockaddr_in);
+      int len = 0;
+      while ((len = (int) recvfrom(fd, buffer, sizeof(buffer), 0, &sa, &sa_len)) > 0) {
+        if (tosc_isBundle(buffer)) {
+          tosc_bundle bundle;
+          tosc_parseBundle(&bundle, buffer, len);
+          const uint64_t timetag = tosc_getTimetag(&bundle);
+          tosc_message osc;
+          while (tosc_getNextMessage(&bundle, &osc)) {
+            tosc_printMessage(&osc);
+          }
+        } else {
+          tosc_message osc;
+          tosc_parseMessage(&osc, buffer, len);
+          tosc_printMessage(&osc);
+        }
+      }
+    }
+  }
+
+  // close the UDP socket
+  close(fd);
 }
 
 int main (int argc, char **argv) {

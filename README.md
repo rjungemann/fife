@@ -27,7 +27,11 @@ pw-jack ./fife
 * OSC
   * Send OSC messages
   * Listen for incoming OSC messages
+* Make MIDI channel a named argument?
 * Allow changing of MIDI API (ALSA, JACK, etc.)
+* Audit validation of inputs
+* Audit use of stdout and stderr
+* Audit rendering of listen commands
 
 ```sh
 --help
@@ -40,13 +44,13 @@ pw-jack ./fife
 fife help
 
 fife midi devices
-fife midi note-on 1 48 64
-fife midi note-off 1 48 0
-fife midi control-change 7 16
-fife midi program-change 1 16
+fife midi note-on --channel=1 48 64
+fife midi note-off --channel=1 48 0
+fife midi control-change --channel=1 7 16
+fife midi program-change --channel=1 16
 fife midi send 0xF0 0x7E 0x10 0x06 0x01 0xF7
 
-fife midi listen 1
+fife midi listen
 
 fife osc send --host=127.0.0.1 --port=9000 /hello siii foo 1 2 3
 
