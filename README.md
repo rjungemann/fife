@@ -25,20 +25,7 @@ make
 pw-jack ./fife
 ```
 
-## TODO
-
-* MIDI
-  * Clock events?
-  * MPE?
-  * RPNs and NRPNs?
-* Virtual MIDI ports should tee output
-* Allow changing of MIDI API (ALSA, JACK, etc.)
-* Use `has_value` or similar to verify optionals
-* Make sure we allow hex or decimal parsing everywhere
-* OSC float64
-* OSC blobs
-* OSC arrays
-* OSC bundles
+## Usage
 
 To get usage info:
 
@@ -104,6 +91,21 @@ fife osc listen --host=0.0.0.0 --port=9000 /hello siii
 ```
 
 OSC types supported currently are `int32`, `float32`, and `string`.
+
+## Roadmap
+
+* MIDI
+  * Clock events?
+  * MPE?
+  * RPNs and NRPNs?
+* Virtual MIDI ports should tee output
+* Allow changing of MIDI API (ALSA, JACK, etc.)
+* Use `has_value` or similar to verify optionals
+* Make sure we allow hex or decimal parsing everywhere
+* OSC float64
+* OSC blobs
+* OSC arrays
+* OSC bundles
 
 ## References
 
