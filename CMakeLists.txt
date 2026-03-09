@@ -13,7 +13,6 @@ add_subdirectory(vendor/rtmidi)
 add_executable(fife src/main.cpp)
 target_compile_options(fife PUBLIC -g -Wno-narrowing -Wno-format)
 
-target_sources(fife PRIVATE vendor/tinyosc/tinyosc.c)
 target_sources(fife PRIVATE
   vendor/oscpp/include/oscpp/client.hpp
   vendor/oscpp/include/oscpp/error.hpp
@@ -26,7 +25,6 @@ target_sources(fife PRIVATE
   vendor/oscpp/include/oscpp/detail/stream.hpp
 )
 
-target_include_directories(fife PRIVATE vendor/tinyosc)
 target_include_directories(fife PRIVATE vendor/oscpp/include)
 
 target_link_libraries(fife PRIVATE rtmidi)

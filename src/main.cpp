@@ -235,37 +235,25 @@ void handle_midi (context &ctx) {
     handle_midi_listen(ctx);
   }
   if (ctx.command =="open-in-port") {
-    if (!ctx.in_device) {
-      fprintf(stderr, "No input device specified\n");
-      bail();
-    }
-    std::optional<int> index = get_midi_in_device_index(ctx, *ctx.in_device);
-    if (!index.has_value()) {
-      bail();
-      return;
-    }
-    fprintf(stderr, "Opening MIDI input device with index %d\n", index.value());
+    fprintf(stderr, "Opening virtual MIDI input device\n");
     try {
       ctx.midiin->openVirtualPort("My Virtual Port");
     } catch (RtMidiError &error) {
       error.printMessage();
     }
+    for (;;) {
+      sleep(1);
+    }
   }
   if (ctx.command == "open-out-port") {
-    if (!ctx.out_device) {
-      fprintf(stderr, "No output device specified\n");
-      bail();
-    }
-    std::optional<int> index = get_midi_out_device_index(ctx, *ctx.out_device);
-    if (!index.has_value()) {
-      bail();
-      return;
-    }
-    fprintf(stderr, "Opening MIDI output device with index %d\n", index.value());
+    fprintf(stderr, "Opening virtual MIDI output device\n");
     try {
       ctx.midiout->openVirtualPort("My Virtual Port");
     } catch (RtMidiError &error) {
       error.printMessage();
+    }
+    for (;;) {
+      sleep(1);
     }
   }
 }

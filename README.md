@@ -28,33 +28,47 @@ pw-jack ./fife
 ## TODO
 
 * MIDI
-  * Create a virtual MIDI port
   * Clock events?
   * MPE?
-  * TODO: What else?
+  * RPNs and NRPNs?
+* Virtual MIDI ports should tee output
 * Allow changing of MIDI API (ALSA, JACK, etc.)
-* Audit validation of inputs
-* Audit use of stdout and stderr
-* Audit rendering of listen commands
 * Use `has_value` or similar to verify optionals
+* Make sure we allow hex or decimal parsing everywhere
+* OSC float64
+* OSC blobs
+* OSC arrays
+* OSC bundles
 
 ```sh
 --help
 --verbose
 --in-device=DEVICE
 --out-device=DEVICE
+--channel=CHANNEL
 --host=HOST
 --port=PORT
 
 fife help
 
+# List MIDI input and output devices
 fife midi devices
+
+# Send a MIDI note
 fife midi note-on --channel=1 48 64
 fife midi note-off --channel=1 48 0
-fife midi control-change --channel=1 7 16
-fife midi program-change --channel=1 16
-fife midi send 0xF0 0x7E 0x10 0x06 0x01 0xF7
 
+# Send a CC message
+fife midi control-change --channel=1 7 16
+
+# Send a program change message
+fife midi program-change --channel=1 16
+
+# Send sysex messages
+fife midi send 0xF0 0x7E 0x10 0x06 0x01 0xF7
+fife midi send 240 126 16 6 1 247
+
+# Open a virtual MIDI port
 fife midi open-in-port "Test Device"
 fife midi open-out-port "Test Device"
 
@@ -65,9 +79,11 @@ fife osc send --host=127.0.0.1 --port=9000 /hello siii foo 1 2 3
 fife osc listen --host=0.0.0.0 --port=9000 /hello siii
 ```
 
+OSC types supported currently are `int32`, `float32`, and `string`.
+
 ## References
 
 * https://caml.music.mcgill.ca/~gary/rtmidi/
 * https://github.com/thestk/rtmidi
-* https://github.com/mhroth/tinyosc
 * https://github.com/kaoskorobase/oscpp
+* https://web.archive.org/web/20150407060239/http://www.philrees.co.uk/nrpnq.htm
