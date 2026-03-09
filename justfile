@@ -12,6 +12,8 @@ run:
   #cd build && pw-jack ./fife midi program-change --out-device=ble 1 16
   #cd build && pw-jack ./fife midi send --out-device=ble 0xF0 0x7E 0x10 0x06 0x01 0xF7
   #cd build && pw-jack ./fife midi listen --in-device=ble 1
+  #cd build && pw-jack ./fife midi open-in-port "Test Port"
+  #cd build && pw-jack ./fife midi open-out-port "Test Port"
   cd build && pw-jack ./fife osc send --host=127.0.0.1 --port=9000 /hello siii foo 1 2 3
   #cd build && pw-jack ./fife osc listen --host=127.0.0.1 --port=9000 /hello siii
 

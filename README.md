@@ -32,6 +32,7 @@ pw-jack ./fife
 * Audit validation of inputs
 * Audit use of stdout and stderr
 * Audit rendering of listen commands
+* Use `has_value` to verify optionals
 
 ```sh
 --help
@@ -49,6 +50,9 @@ fife midi note-off --channel=1 48 0
 fife midi control-change --channel=1 7 16
 fife midi program-change --channel=1 16
 fife midi send 0xF0 0x7E 0x10 0x06 0x01 0xF7
+
+fife midi open-in-port "Test Device"
+fife midi open-out-port "Test Device"
 
 fife midi listen
 
