@@ -1,5 +1,6 @@
 #include <optional>
 #include <memory>
+#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <getopt.h>
