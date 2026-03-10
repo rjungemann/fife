@@ -23,6 +23,13 @@ cd build
 cmake ..
 make
 
+# With homebrew
+HOMEBREW_DEVELOPER="true" brew install --head ./homebrew/fife.rb
+```
+
+To run:
+
+```
 # To run,
 build/fife
 
