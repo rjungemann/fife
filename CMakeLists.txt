@@ -7,6 +7,10 @@ project(fife)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+set(RTMIDI_BUILD_STATIC_LIBS YES)
+set(RTMIDI_BUILD_DYNAMIC_LIBS NO)
+
+# TODO: How to toggle between vendor and system RtMidi?
 add_subdirectory(vendor/rtmidi)
 
 # Add the executable

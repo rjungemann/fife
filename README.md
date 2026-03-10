@@ -7,7 +7,7 @@ By Roger Jungemann
 Fife is a tool for processing MIDI and OSC messages from the command line.
 Integrate your shell scripts with MIDI and OSC.
 
-## Instructions
+## Build instructions
 
 Requires your OS's build tools and `cmake`. `just` is optional, for my
 convenience.
@@ -22,6 +22,11 @@ mkdir -p build
 cd build
 cmake ..
 make
+
+# To run,
+build/fife
+
+# If you are using PipeWire on Linux (`sudo apt install pw-jack`)
 pw-jack ./fife
 ```
 

@@ -4,7 +4,6 @@
 #include <cstdlib>
 #include <getopt.h>
 #include "RtMidi.h"
-/*#include "tinyosc.h"*/
 
 #include <arpa/inet.h>
 #include <sys/select.h>

@@ -9,6 +9,9 @@ build:
   mkdir -p build
   cd build && cmake .. && make
 
+install:
+  cd build && cmake --install
+
 run:
   cd build && {{fife}} midi devices
   cd build && {{fife}} midi note-on --out-device={{outdevice}} --channel=1 48 64
