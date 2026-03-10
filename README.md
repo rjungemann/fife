@@ -34,7 +34,10 @@ To run:
 build/fife
 
 # If you are using PipeWire on Linux (`sudo apt install pw-jack`)
-pw-jack ./fife
+pw-jack build/fife
+
+# From Homebrew,
+fife
 ```
 
 ## Usage
@@ -97,8 +100,10 @@ fife midi listen --channel=1
 Send and receive OSC messages:
 
 ```sh
+# Send an OSC message
 fife osc send --host=127.0.0.1 --port=9000 /hello siii foo 1 2 3
 
+# Listen for OSC messages
 fife osc listen --host=0.0.0.0 --port=9000 /hello siii
 ```
 
@@ -114,10 +119,9 @@ OSC types supported currently are `int32`, `float32`, and `string`.
 * Allow changing of MIDI API (ALSA, JACK, etc.)
 * Use `has_value` or similar to verify optionals
 * Make sure we allow hex or decimal parsing everywhere
-* OSC float64
-* OSC blobs
 * OSC arrays
 * OSC bundles
+* OSC over TCP
 
 ## References
 

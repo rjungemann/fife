@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 #include <getopt.h>
 #include "RtMidi.h"
 
@@ -385,13 +386,18 @@ void handle_osc_send (context &ctx) {
   const int buffersize = 2048;
   void *buffer[buffersize];
   OSCPP::Client::Packet packet(buffer, buffersize);
-  packet.openMessage(address.c_str(), 2 + OSCPP::Tags::array(type_tags.size()));
+  packet.openMessage(address.c_str(), type_tags.size());
   for (auto i = 0; i < type_tags.size(); i++) {
     char tag = type_tags[i];
     switch (tag) {
       case 's':
         packet.string(arg_strings[i].c_str());
         break;
+      case 'b': {
+        OSCPP::Blob blob(arg_strings[i].c_str(), arg_strings[i].size());
+        packet.blob(blob);
+        break;
+      }
       case 'i':
         packet.int32(std::atoi(arg_strings[i].c_str()));
         break;
@@ -466,36 +472,35 @@ void handle_osc_packet (const OSCPP::Server::Packet& packet) {
     OSCPP::Server::ArgStream args(msg.args());
 
     // TODO
-    fprintf(stdout, "TODO: Received message\n");
-
-    /*if (msg == "/s_new") {*/
-    /*  const char* name = args.string();*/
-    /*  const int32_t id = args.int32();*/
-    /*  std::cout << "/s_new" << " "*/
-    /*    << name << " "*/
-    /*    << id << " ";*/
-    /*  // Get the params array as an ArgStream*/
-    /*  OSCPP::Server::ArgStream params(args.array());*/
-    /*  while (!params.atEnd()) {*/
-    /*    const char* param = params.string();*/
-    /*    const float value = params.float32();*/
-    /*    std::cout << param << ":" << value << " ";*/
-    /*  }*/
-    /*  std::cout << std::endl;*/
-    /*} else if (msg == "/n_set") {*/
-    /*  const int32_t id = args.int32();*/
-    /*  const char* key = args.string();*/
-    /*  // Numeric arguments are converted automatically*/
-    /*  // to float32 (e.g. from int32).*/
-    /*  const float value = args.float32();*/
-    /*  std::cout << "/n_set" << " "*/
-    /*    << id << " "*/
-    /*    << key << " "*/
-    /*    << value << std::endl;*/
-    /*} else {*/
-    /*  // Simply print unknown messages*/
-    /*  std::cout << "Unknown message: " << msg << std::endl;*/
-    /*}*/
+    fprintf(stderr, "Received message with %d args\n", args.size());
+    struct timespec time;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &time);
+    uint64_t t = time.tv_sec * 1000000 + time.tv_nsec / 1000;
+    while (!args.atEnd()) {
+      char tag = args.tag();
+      switch (tag) {
+        case 'b': {
+          OSCPP::Blob b = args.blob();
+          fprintf(stdout, "%ld\t%c\tblob\t%d\t\"%s\"\n", t, tag, b.size(), b.data());
+          break;
+        }
+        case 's': {
+          const char *s = args.string();
+          fprintf(stdout, "%ld\t%c\tstring\t%d\t\"%s\"\n", t, tag, strlen(s), s);
+          break;
+        }
+        case 'i': {
+          int i = args.int32();
+          fprintf(stdout, "%ld\t%c\tint32\t%d\n", t, tag, i);
+          break;
+        }
+        case 'f': {
+          float f = args.float32();
+          fprintf(stdout, "%ld\t%c\tfloat32\t%f\n", t, tag, f);
+          break;
+        }
+      }
+    }
   }
 }
 
@@ -528,7 +533,8 @@ void handle_osc_listen (context &ctx) {
       socklen_t sa_len = sizeof(struct sockaddr_in);
       int len = 0;
       while ((len = (int) recvfrom(fd, buffer.data(), buffer.size(), 0, &sa, &sa_len)) > 0) {
-        handle_osc_packet(OSCPP::Server::Packet(buffer.data(), len));
+        const char *data = buffer.data();
+        handle_osc_packet(OSCPP::Server::Packet(data, len));
       }
     }
   }
