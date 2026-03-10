@@ -104,7 +104,7 @@ Send and receive OSC messages:
 fife osc send --host=127.0.0.1 --port=9000 /hello siii foo 1 2 3
 
 # Listen for OSC messages
-fife osc listen --host=0.0.0.0 --port=9000 /hello siii
+fife osc listen --host=0.0.0.0 --port=9000 /hello
 ```
 
 OSC types supported currently are `int32`, `float32`, and `string`.

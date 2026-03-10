@@ -23,5 +23,5 @@ run:
   #cd build && {{fife}} midi open-in-port "Test Port"
   #cd build && {{fife}} midi open-out-port "Test Port"
   cd build && {{fife}} osc send --host=127.0.0.1 --port=9000 /hello siii foo 1 2 3
-  #cd build && {{fife}} osc listen --host=127.0.0.1 --port=9000 /hello siii
+  #cd build && {{fife}} osc listen --host=127.0.0.1 --port=9000 /hello
 

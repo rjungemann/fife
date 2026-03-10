@@ -481,22 +481,22 @@ void handle_osc_packet (const OSCPP::Server::Packet& packet) {
       switch (tag) {
         case 'b': {
           OSCPP::Blob b = args.blob();
-          fprintf(stdout, "%ld\t%c\tblob\t%d\t\"%s\"\n", t, tag, b.size(), b.data());
+          fprintf(stdout, "%ld\tblob\t%d\t\"%s\"\n", t, b.size(), b.data());
           break;
         }
         case 's': {
           const char *s = args.string();
-          fprintf(stdout, "%ld\t%c\tstring\t%d\t\"%s\"\n", t, tag, strlen(s), s);
+          fprintf(stdout, "%ld\tstring\t%d\t\"%s\"\n", t, strlen(s), s);
           break;
         }
         case 'i': {
           int i = args.int32();
-          fprintf(stdout, "%ld\t%c\tint32\t%d\n", t, tag, i);
+          fprintf(stdout, "%ld\tint32\t%d\n", t, i);
           break;
         }
         case 'f': {
           float f = args.float32();
-          fprintf(stdout, "%ld\t%c\tfloat32\t%f\n", t, tag, f);
+          fprintf(stdout, "%ld\tfloat32\t%f\n", t, f);
           break;
         }
       }
