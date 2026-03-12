@@ -25,16 +25,16 @@ jobs:
       # - name: Test Project
       #   run: cd build && ./fife help
 
-      - name: Archive Project
-        run: cd build && tar -czvf fife-linux-x86.tar.gz fife
-
       - name: Get Hash
         run: echo "SHORT_SHA=$(git rev-parse --short "$GITHUB_SHA")" >> $GITHUB_ENV
 
       - name: Check Hash
         run: echo "${{ env.SHORT_SHA }}"
 
+      - name: Archive Project
+        run: cd build && tar -czvf fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz fife
+
       - uses: actions/upload-artifact@v4
         with:
-          name: fife-linux-${{ env.SHORT_SHA }}-x86.tar.gz
-          path: build/fife-linux-${{ env.SHORT_SHA }}-x86.tar.gz
+          name: fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
+          path: build/fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
