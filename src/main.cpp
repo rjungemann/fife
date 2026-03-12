@@ -90,6 +90,10 @@ void print_usage () {
 }
 
 void handle_arguments (context &ctx, int argc, char **argv) {
+  if (argc == 2 && argv[1] == "help") {
+    print_usage();
+    exit(EXIT_SUCCESS);
+  }
   if (argc < 3) {
     print_usage();
     bail();
@@ -573,5 +577,5 @@ int main (int argc, char **argv) {
     handle_osc(ctx);
   }
 
-  return 0;
+  return EXIT_SUCCESS;
 }
