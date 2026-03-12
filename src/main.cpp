@@ -90,9 +90,10 @@ void print_usage () {
 }
 
 void handle_arguments (context &ctx, int argc, char **argv) {
-  if (argc == 2 && argv[1] == "help") {
+  if (argc == 2 && std::string(argv[1]) == "help") {
     print_usage();
     exit(EXIT_SUCCESS);
+    return;
   }
   if (argc < 3) {
     print_usage();
