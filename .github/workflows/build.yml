@@ -34,7 +34,18 @@ jobs:
       - name: Archive Project
         run: cd build && tar -czvf fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz fife
 
-      - uses: actions/upload-artifact@v4
+      # - uses: actions/upload-artifact@v4
+      #   id: artifact-upload-step
+      #   with:
+      #     name: fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
+      #     path: build/fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
+      #
+      # - name: Output artifact ID
+      #   run:  echo 'Artifact ID is ${{ steps.artifact-upload-step.outputs.artifact-url }}'
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
         with:
-          name: fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
-          path: build/fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
+          files: build/fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
+
