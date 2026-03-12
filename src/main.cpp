@@ -59,15 +59,34 @@ void bail () {
 }
 
 void print_usage () {
-  fprintf(stderr, "Usage: fife <command> [options]\n");
-  fprintf(stderr, "Commands:\n");
-  fprintf(stderr, "  --verbose           Enable verbose mode\n");
-  fprintf(stderr, "  --help              Show this help message\n");
-  fprintf(stderr, "  --channel=1         Channel to send messages to (default: 1)\n");
-  fprintf(stderr, "  --in-device         Name of hardware device to use\n");
-  fprintf(stderr, "  --out-device        Name of hardware device to use\n");
-  fprintf(stderr, "  --host=127.0.0.1    Host to send OSC messages to (default: 127.0.0.1)\n");
-  fprintf(stderr, "  --port=9000         Port to send OSC messages to (default: 9000)\n");
+  fprintf(stderr, "Usage: fife <adapter> <command> [options]\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "MIDI Commands:\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "  fife midi devices\n");
+  fprintf(stderr, "  fife midi note-on <note> <velocity>\n");
+  fprintf(stderr, "  fife midi note-off <note> <velocity>\n");
+  fprintf(stderr, "  fife midi control-change <number> <value>\n");
+  fprintf(stderr, "  fife midi program-change <number>\n");
+  fprintf(stderr, "  fife midi send [bytes]\n");
+  fprintf(stderr, "  fife midi open-in-port <name>\n");
+  fprintf(stderr, "  fife midi open-out-port <name>\n");
+  fprintf(stderr, "  fife midi listen\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "OSC Commands:\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "  fife osc send <route> <type_args> [args...]\n");
+  fprintf(stderr, "  fife osc listen <route>\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "Options:\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "  --verbose            Enable verbose mode\n");
+  fprintf(stderr, "  --help               Show this help message\n");
+  fprintf(stderr, "  --channel=<channel>  Channel to send messages to (default: 1)\n");
+  fprintf(stderr, "  --in-device=<name>   Loosely-matched name of hardware device to use\n");
+  fprintf(stderr, "  --out-device=<name>  Loosely-matched name of hardware device to use\n");
+  fprintf(stderr, "  --host=<address>     Host to send OSC messages to (default: 127.0.0.1)\n");
+  fprintf(stderr, "  --port=<port>        Port to send OSC messages to (default: 9000)\n");
 }
 
 void handle_arguments (context &ctx, int argc, char **argv) {

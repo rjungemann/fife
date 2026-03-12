@@ -117,6 +117,7 @@ OSC types supported currently are `int32`, `float32`, and `string`.
   * RPNs and NRPNs?
 * Virtual MIDI ports should tee output
 * Allow changing of MIDI API (ALSA, JACK, etc.)
+* Audit verbose vs. non-verbose output
 * Use `has_value` or similar to verify optionals
 * Make sure we allow hex or decimal parsing everywhere
 * OSC arrays
