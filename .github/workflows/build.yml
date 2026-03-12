@@ -11,7 +11,7 @@ jobs:
           ref: main
           submodules: true # Use this if your project uses git submodules
           fetch-depth: 2
-        run: git checkout HEAD^
+      - run: git checkout HEAD^
 
       - name: Install latest CMake
         run: sudo apt-get install -y build-essential cmake
