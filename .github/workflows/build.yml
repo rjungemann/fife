@@ -82,5 +82,5 @@ jobs:
         if: github.ref_type == 'tag'
         with:
           files:
-            - build/fife-${{ env.SHORT_SHA }}-mac-x86.tar.gz
-            - build/fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
+            build/fife-${{ env.SHORT_SHA }}-mac-x86.tar.gz
+            build/fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
