@@ -1,6 +1,9 @@
 name: CMake Build
 
-on: [push, pull_request]
+on:
+  push:
+    tags:
+      - '*' # Triggers on any tag push
 
 jobs:
   build_mac:
