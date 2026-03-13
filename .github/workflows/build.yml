@@ -29,6 +29,7 @@ jobs:
         run: cd build && tar -czvf fife-${{ env.SHORT_SHA }}-mac-x86.tar.gz fife
 
       - uses: actions/upload-artifact@v4
+        if: github.ref_type == 'tag'
         with:
           name: fife-${{ env.SHORT_SHA }}-mac-x86.tar.gz
           path: build/fife-${{ env.SHORT_SHA }}-mac-x86.tar.gz
@@ -62,6 +63,7 @@ jobs:
         run: cd build && tar -czvf fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz fife
 
       - uses: actions/upload-artifact@v4
+        if: github.ref_type == 'tag'
         with:
           name: fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
           path: build/fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
@@ -93,7 +95,7 @@ jobs:
 
       - name: Release
         uses: softprops/action-gh-release@v2
-        # if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag'
         with:
           files:
             build/fife-${{ env.SHORT_SHA }}-mac-x86.tar.gz
