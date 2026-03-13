@@ -12,19 +12,12 @@ jobs:
           submodules: true # Use this if your project uses git submodules
           fetch-depth: 2
 
-      # - name: Install dependencies with Homebrew
-      #   run: |
-      #     brew update
-      #     brew install cmake
-
+      # Homebrew, dev tools, and CMake already exist
       - name: Configure CMake
         run: mkdir -p build && cd build && cmake ..
 
       - name: Build Project
         run: cd build && make
-
-      # - name: Test Project
-      #   run: cd build && ./fife help
 
       - name: Get Hash
         run: echo "SHORT_SHA=$(git rev-parse --short "$GITHUB_SHA")" >> $GITHUB_ENV
@@ -38,7 +31,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: fife-${{ env.SHORT_SHA }}-mac-x86.tar.gz
-          path: fife-${{ env.SHORT_SHA }}-mac-x86.tar.gz
+          path: build/fife-${{ env.SHORT_SHA }}-mac-x86.tar.gz
 
   build_linux:
     runs-on: ubuntu-latest
@@ -59,9 +52,6 @@ jobs:
       - name: Build Project
         run: cd build && make
 
-      # - name: Test Project
-      #   run: cd build && ./fife help
-
       - name: Get Hash
         run: echo "SHORT_SHA=$(git rev-parse --short "$GITHUB_SHA")" >> $GITHUB_ENV
 
@@ -74,7 +64,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
-          path: fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
+          path: build/fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
 
   release:
     runs-on: ubuntu-latest
