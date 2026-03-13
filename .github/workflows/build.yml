@@ -4,6 +4,32 @@ on: [push, pull_request]
 
 jobs:
   build:
+    runs-on: macos-latest # Specifies a macOS runner
+    steps:
+      - uses: actions/checkout@v4 # Checks out your repository
+        with:
+          ref: main
+          submodules: true # Use this if your project uses git submodules
+          fetch-depth: 2
+
+      - name: Install dependencies with Homebrew
+        run: |
+          brew update --preinstall
+          brew install cmake
+
+      - name: Configure CMake
+        run: mkdir -p build && cd build && cmake ..
+
+      - name: Build Project
+        run: cd build && make
+
+      # - name: Test Project
+      #   run: cd build && ./fife help
+
+      - name: Archive Project
+        run: cd build && tar -czvf fife-${{ env.SHORT_SHA }}-mac-x86.tar.gz fife
+
+  build_linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -34,18 +60,27 @@ jobs:
       - name: Archive Project
         run: cd build && tar -czvf fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz fife
 
-      # - uses: actions/upload-artifact@v4
-      #   id: artifact-upload-step
-      #   with:
-      #     name: fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
-      #     path: build/fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
-      #
-      # - name: Output artifact ID
-      #   run:  echo 'Artifact ID is ${{ steps.artifact-upload-step.outputs.artifact-url }}'
+  release:
+    runs-on: ubuntu-latest
+    needs: [build_mac, build_linux]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          submodules: true # Use this if your project uses git submodules
+          fetch-depth: 2
+      - run: git checkout HEAD^
+
+      - name: Get Hash
+        run: echo "SHORT_SHA=$(git rev-parse --short "$GITHUB_SHA")" >> $GITHUB_ENV
+
+      - name: Check Hash
+        run: echo "${{ env.SHORT_SHA }}"
 
       - name: Release
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
-          files: build/fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
-
+          files:
+            - build/fife-${{ env.SHORT_SHA }}-mac-x86.tar.gz
+            - build/fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
