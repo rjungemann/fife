@@ -3,7 +3,7 @@ name: CMake Build
 on: [push, pull_request]
 
 jobs:
-  build:
+  build_mac:
     runs-on: macos-latest # Specifies a macOS runner
     steps:
       - uses: actions/checkout@v4 # Checks out your repository
