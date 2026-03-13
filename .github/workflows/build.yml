@@ -100,6 +100,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
-          files:
+          files: |
             fife-${{ env.SHORT_SHA }}-mac-x86.tar.gz
             fife-${{ env.SHORT_SHA }}-linux-x86.tar.gz
