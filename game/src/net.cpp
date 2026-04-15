@@ -101,13 +101,13 @@ static bool cb_on_event(GGPOEvent *info)
                    info->u.connected.player);
             break;
         case GGPO_EVENTCODE_SYNCHRONIZING_WITH_PEER:
-            printf("[ggpo] synchronising with peer %d (%d/%d)\n",
+            printf("[ggpo] synchronizing with peer %d (%d/%d)\n",
                    info->u.synchronizing.player,
                    info->u.synchronizing.count,
                    info->u.synchronizing.total);
             break;
         case GGPO_EVENTCODE_SYNCHRONIZED_WITH_PEER:
-            printf("[ggpo] synchronised with peer %d\n",
+            printf("[ggpo] synchronized with peer %d\n",
                    info->u.synchronized.player);
             break;
         case GGPO_EVENTCODE_RUNNING:

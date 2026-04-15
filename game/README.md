@@ -11,7 +11,7 @@ C + CMake + [Raylib](https://www.raylib.com/) project.
 | Concern | This demo |
 |---|---|
 | Game loop | Raylib `WindowShouldClose` loop with GGPO hooks at each step |
-| Game state | Flat `GameState` struct — fully serialisable with `memcpy` |
+| Game state | Flat `GameState` struct — fully serializable with `memcpy` |
 | Input | Raylib `IsKeyDown` → bitmask → `ggpo_add_local_input` |
 | Rollback | Transparent: GGPO calls `save/load/advance_frame` callbacks |
 | Determinism | `-ffp-contract=off`; own xorshift32 PRNG inside `GameState` |
@@ -83,7 +83,7 @@ game/
 
 ## How GGPO integrates — the short version
 
-### 1. Serialisable `GameState`
+### 1. Serializable `GameState`
 
 Everything the simulation touches lives inside one flat, heap-pointer-free
 `GameState` struct (`game.h`).  GGPO's `save_game_state` callback
